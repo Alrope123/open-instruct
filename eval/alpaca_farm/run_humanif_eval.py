@@ -17,12 +17,25 @@ def main(args):
     random.seed(42)
     os.makedirs(args.save_dir, exist_ok=True)
 
+    if args.config_name is not None:
+        assert args.config_dir is not None
+
+    if args.embed_human_response:
+        assert args.reference_path is not None   
+
     logging.info("loading data and model...")
 
     raw_text_prompts = defaultdict(list)  # category -> list of example dicts
     human_references = defaultdict(list)  # category -> list of example dicts
     chat_formatting_function = dynamic_import_function(args.chat_formatting_function) if args.use_chat_format else None
-    no_robots_data = datasets.load_dataset("HuggingFaceH4/no_robots")["train_sft"]
+
+    # Load local or huggingface no_robot dataset
+    if args.dataset.endswith('.json'):
+        no_robots_data = datasets.load_dataset("json", data_files=args.dataset)["train"]
+    elif args.dataset.endswith('.csv'):
+        no_robots_data = datasets.load_dataset("csv", data_files=args.dataset)["train"]
+    else:
+        no_robots_data = datasets.load_dataset(args.dataset)["train_sft"]
     for example in no_robots_data:
         category = example["category"]
         if args.nr_category and category not in args.nr_category:
@@ -145,18 +158,25 @@ def main(args):
                 model_results.append(example)
 
         category_references = references[category]
+        if args.embed_human_response:
+            category_human_references = human_references[category]
+        else:
+            category_human_references = None
         logging.info(f"Running alpaca eval on category: {category}")
         output_path = os.path.join(args.save_dir, category.lower().replace(" ", "_"))
         os.makedirs(output_path, exist_ok=True)
         df_leaderboard, _ = alpaca_farm_evaluate(
             model_outputs=model_results,
             reference_outputs=category_references,
-            annotators_config="alpaca_eval_gpt4",
+            human_outputs=category_human_references,
+            annotators_config=args.config_name,
             output_path=output_path,
             is_return_instead_of_print=True,
             caching_path=os.path.join(output_path, "alpaca_eval_annotator_cache.json"),
             precomputed_leaderboard=None,
-            is_cache_leaderboard=False
+            is_cache_leaderboard=False,
+            base_dir=args.config_dir,
+            output_keys=("output_1", "output_2", "output_human") if args.embed_human_response else ("output_1", "output_2")
         )
         print(df_leaderboard.to_string(float_format="%.2f"))
         for key, value in df_leaderboard.to_dict().items():
@@ -169,6 +189,12 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        default="HuggingFaceH4/no_robots",
+        help="Path to the reference outputs. If none is provided, will use human-written references."
+    )
     parser.add_argument(
         "--nr_category",
         type=str,
@@ -251,6 +277,23 @@ if __name__ == "__main__":
         "--use_vllm",
         action="store_true",
         help="If given, we will use vLLM to generate the predictions - much faster.",
+    )
+    parser.add_argument(
+        "--config_dir",
+        type=str,
+        default=None,
+        help="If specified, we will use the dir as the root directory for annotator configuration.",
+    )
+    parser.add_argument(
+        "--config_name",
+        type=str,
+        default="alpaca_eval_gpt4",
+        help="We will use the directory under configuration directory as the file that contains the annotator configuration file.",
+    )
+    parser.add_argument(
+        "--embed_human_response",
+        action="store_true",
+        help="If given, we will embed human response into the prompt."
     )
     args = parser.parse_args()
 
