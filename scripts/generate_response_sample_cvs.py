@@ -26,14 +26,14 @@ def main(args):
 
     prompts = {}
     if prompt_file_path:
-        assert os.path.exists(prompt_file_path)
+        assert os.path.exists(prompt_file_path), prompt_file_path
         with open(prompt_file_path, mode ='r') as f:    
             csvFile = csv.DictReader(f)
             for line in csvFile:
                 cat = line["Task"]
                 if cat not in prompts:
                     prompts[cat] = []
-                prompts[cat].append(line['Instruction'])
+                prompts[cat].append((line['Instruction'], line["Output 1"]))
 
     examples = []
     for category in nr_category:
@@ -43,32 +43,37 @@ def main(args):
             for i, annotation in enumerate(annotations):
                 if i < n_per_cat:
                     examples.append([
-                        category, annotation['instruction'], annotation['output_1'], annotation['output_2'], int(annotation['preference'])
+                        category, annotation['instruction'], annotation['output_1'], annotation['output_2'], annotation['output_human'] if 'output_human' in annotation else "", int(annotation['preference'])
                     ])
                 else:
                     break
         else:
             cat_prompts = prompts[category]
-            for prompt in cat_prompts:
+            for prompt, first_output in cat_prompts:
                 found = False
                 for annotation in annotations:
                     if similar(annotation['instruction'], prompt.strip()) > 0.9:
-                        shuffled = bool(random.getrandbits(1))
+                        if "Shuffled" in annotation:
+                            shuffled = True if annotation["Shuffled"] == "TRUE" else False
+                        else:
+                            shuffled = bool(random.getrandbits(1))
+
                         output_1, output_2 = (annotation['output_1'], annotation['output_2']) if not shuffled else (annotation['output_2'], annotation['output_1'])
+                        # assert (first_output == output_1 and not shuffled) or (first_output == output_2 and shuffled), (output_1, output_2, first_output, shuffled)
                         preference = int(annotation['preference']) if not shuffled else preference_map[int(annotation['preference'])]
                         examples.append([
-                            category, annotation['instruction'], output_1, output_2, preference, shuffled
+                            category, annotation['instruction'], output_1, output_2, annotation['output_human'] if 'output_human' in annotation else "", preference, shuffled
                         ])
                         found = True
                 assert found, (category, prompt)
 
     f = csv.writer(open(os.path.join(save_dir, "examples.csv"), "w+"))
-    titles = ["Task", "Instruction", "Output 1", f"Output 2", "GPT4 Judgement", "Shuffled"]
+    titles = ["Task", "Instruction", "Output 1", "Output 2", "Output Human", "GPT4 Judgement", "Shuffled"]
     f.writerow(titles)
 
     assert len(examples) == n_per_cat * len(nr_category), [len(examples), n_per_cat * len(nr_category)]
     for example in examples:
-        assert len(example) == len(titles) 
+        assert len(example) == len(titles), (example[-1], titles)
         f.writerow(example)
     
 
