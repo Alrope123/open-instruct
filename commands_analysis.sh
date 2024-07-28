@@ -3,7 +3,6 @@ beaker image delete alrope/xinxil_open_instruct
 beaker image create xinxil_open_instruct -n xinxil_open_instruct -w ai2/xinxil-default
 
 beaker session create --budget ai2/oe-adapt --cpus 15.5 --gpus 1 --workspace ai2/pradeepd-open-instruct --image beaker://alrope/xinxil_open_instruct --mount beaker://alrope/references=/references --mount beaker://alrope/dataset=/dataset --mount beaker://alrope/xinxil-Meta-Llama-3-8B-Instruct=/model --no-update-default-image --secret-env OPENAI_API_KEY=openai_api_key --secret-env HF_TOKEN=huggingface_token 
-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
 beaker session create --budget ai2/oe-adapt --cpus 15.5 --gpus 0 --workspace ai2/pradeepd-open-instruct --image beaker://Yizhongw03/open-instruct --mount beaker://alrope/references=/references --mount beaker://alrope/dataset=/dataset --no-update-default-image --secret-env OPENAI_API_KEY=openai_api_key --secret-env HF_TOKEN=huggingface_token 
 
 pip install -U torch==2.2.0
