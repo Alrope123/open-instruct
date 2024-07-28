@@ -15,8 +15,11 @@ def similar(str1, str2):
 def main(args):
     random.seed(42)
 
-    prediction_dir = args.prediction_dir
-    prompt_file_path = args.prompt_file_path
+    version_name = args.version_name
+    # prediction_dir = os.path.join(args.prediction_dir, f"chat-7b-against-gpt3.5-v{version_name}-prompt-test-set-new")
+    # prompt_file_path = os.path.join(args.prompt_file_path, f"chat-7b-against-gpt3.5-v{version_name}-prompt-test-set-new")
+    prediction_dir = os.path.join(args.prediction_dir, f"{version_name}")
+    prompt_file_path = os.path.join(args.prompt_file_path)
     model_name = args.model_name
     save_dir = args.save_dir
     n_per_cat = args.n_per_cat
@@ -42,8 +45,12 @@ def main(args):
         if prompts == {}:
             for i, annotation in enumerate(annotations):
                 if i < n_per_cat:
+                    preference_key = sorted([k for k in annotation.keys() if k.startswith("preference")])[-1]
+                    shuffled = bool(random.getrandbits(1))
+                    output_1, output_2 = (annotation['output_1'], annotation['output_2']) if not shuffled else (annotation['output_2'], annotation['output_1'])
+                    preference = int(annotation[preference_key]) if not shuffled else preference_map[int(annotation[preference_key])]
                     examples.append([
-                        category, annotation['instruction'], annotation['output_1'], annotation['output_2'], annotation['output_human'] if 'output_human' in annotation else "", int(annotation['preference'])
+                        category, annotation['instruction'], output_1, output_2, annotation['output_human'] if 'output_human' in annotation else "", preference, shuffled
                     ])
                 else:
                     break
@@ -57,17 +64,17 @@ def main(args):
                             shuffled = True if annotation["Shuffled"] == "TRUE" else False
                         else:
                             shuffled = bool(random.getrandbits(1))
-
+                        preference_key = sorted([k for k in annotation.keys() if k.startswith("preference")])[-1]
                         output_1, output_2 = (annotation['output_1'], annotation['output_2']) if not shuffled else (annotation['output_2'], annotation['output_1'])
                         # assert (first_output == output_1 and not shuffled) or (first_output == output_2 and shuffled), (output_1, output_2, first_output, shuffled)
-                        preference = int(annotation['preference']) if not shuffled else preference_map[int(annotation['preference'])]
+                        preference = int(annotation[preference_key]) if not shuffled else preference_map[int(annotation[preference_key])]
                         examples.append([
                             category, annotation['instruction'], output_1, output_2, annotation['output_human'] if 'output_human' in annotation else "", preference, shuffled
                         ])
                         found = True
                 assert found, (category, prompt)
 
-    f = csv.writer(open(os.path.join(save_dir, "examples.csv"), "w+"))
+    f = csv.writer(open(os.path.join(save_dir, f"{version_name}.csv"), "w+"))
     titles = ["Task", "Instruction", "Output 1", "Output 2", "Output Human", "GPT4 Judgement", "Shuffled"]
     f.writerow(titles)
 
@@ -102,6 +109,13 @@ if __name__ == "__main__":
         type=str,
         default=None,
         help="Path to the file that contains prompts."
+    )
+
+    parser.add_argument(
+        "--version_name",
+        type=str,
+        default="v8_wo_v0",
+        help="Path to the dir that contains the prediction file."
     )
 
     parser.add_argument(

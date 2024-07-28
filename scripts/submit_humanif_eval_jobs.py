@@ -45,6 +45,7 @@ models = [
     ("llama2-chat-7B", "01HCT5D48MSRF0PCNAWNSJDN54", None, "tuned_lm"),
     # ("llama2-chat-13B", "01HCT5Q7A6FE8RZKY8TYN64ZW2", None, "tuned_lm"),
     # ("llama2-chat-70B", "01HCT63DVK7YPT6P9SN35XH417", None, "tuned_lm"),
+    # ("Meta-Llama-3-8B-Instruct", "01HWYYE3VBWHVVXWZ7PTSPF3F7", None, "tuned_lm"),
     
     # our ablation models
     # ("finetuned_llama1_7B_dolly", "01GZVKGQZAMQMVG9307KWS4GMN", None, "tuned_lm"),
@@ -137,218 +138,230 @@ models = [
 ]
 
 #--------------- experiments about number of supervision tasks -------------------------
+# for version in ["2_w_v0", "2_wo_v0", "8_w_v0", "8_wo_v0", "9_w_1_v0", "9_w_2_v0", "9_w_3_v0", "9_wo_1_v0", "9_wo_2_v0", "9_wo_3_v0"]:
+for model in ["llama3"]:
+    for version in ["2_w_v0"]:
+    # for version in ["2_w_v0", "2_wo_v0", "8_w_v0", "8_wo_v0", "9_w_1_v0", "9_w_2_v0", "9_w_3_v0", "9_wo_1_v0", "9_wo_2_v0", "9_wo_3_v0"]:
+        for model_info in models:
+            print(f"Submitting humanif_eval for model: {model_info[0]}")
+            d = copy.deepcopy(d1)
 
-for model_info in models:
-    print(f"Submitting humanif_eval for model: {model_info[0]}")
-    d = copy.deepcopy(d1)
+            model_name = model_info[0] + f"_{model_info[2]}" if model_info[2] is not None else model_info[0]
+            # name = f"open_instruct_eval_humanif_{model_name}_{today}"
+            name = f"open_instruct_eval_humanif_{model_name}_{today}_v{version}_{model}"
+            d['description'] = name
+            d['tasks'][0]['name'] = name
+            # change image
+            d['tasks'][0]['image']['beaker'] = "alrope/xinxil_open_instruct"
 
-    model_name = model_info[0] + f"_{model_info[2]}" if model_info[2] is not None else model_info[0]
-    name = f"open_instruct_eval_humanif_{model_name}_{today}_v{version}"
-    d['description'] = name
-    d['tasks'][0]['name'] = name
+            if model_info[0] == "gpt-3.5-turbo":
+                d['tasks'][0]['arguments'][0] = '''
+                python -m eval.alpaca_farm.run_humanif_eval \
+                    --limit_eval_size 200 \
+                    --save_dir /output/ \
+                    --openai_engine gpt-3.5-turbo \
+                    --max_new_tokens 4096 \
+                    --nr_category "Coding"
+                '''
+                d['tasks'][0]['resources']['gpuCount'] = 0
 
-    if model_info[0] == "gpt-3.5-turbo":
-        d['tasks'][0]['arguments'][0] = '''
-        python /net/nfs.cirrascale/allennlp/pradeepd/workspace/open-instruct-old/eval/alpaca_farm/run_humanif_eval.py \
-            --limit_eval_size 200 \
-            --save_dir /output/ \
-            --openai_engine gpt-3.5-turbo \
-            --max_new_tokens 4096 \
-            --nr_category "Generation" "Open QA" "Brainstorm" "Rewrite" "Summarize" "Classify" "Closed QA" "Extract" \
-            --config_dir eval/alpaca_farm/configs \
-            --config_name gpt4
-        '''
-        d['tasks'][0]['resources']['gpuCount'] = 0
+            else:
+                d['tasks'][0]['arguments'][0] = f'''
+                python -m eval.alpaca_farm.run_humanif_eval \
+                    --dataset /dataset/no_robots_test_data_new.json \
+                    --limit_eval_size 200 \
+                    --use_vllm \
+                    --output_path /references/Llama2-chat-7b_references_test_dataset_new.json \
+                    --reference_path /references/gpt-3.5-turbo_references_test_dataset_new.json \
+                    --save_dir /output/ \
+                    --use_chat_format \
+                    --chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format \
+                    --nr_category "Brainstorm" "Open QA" "Closed QA" "Extract" "Generation" "Rewrite" "Summarize" "Coding" "Classify" \
+                    --config_dir /net/nfs.cirrascale/allennlp/xinxil/open-instruct/eval/alpaca_farm/configs \
+                    --config_name {version}_{model}
+                '''
+                # d['tasks'][0]['arguments'][0] = f'''
+                # python -m eval.alpaca_farm.run_humanif_eval \
+                #     --dataset /dataset/no_robots_test_data.json \
+                #     --limit_eval_size 200 \
+                #     --use_vllm \
+                #     --model_name_or_path /model \
+                #     --tokenizer_name_or_path /model \
+                #     --reference_path /references/gpt-3.5-turbo_references_test_dataset.json \
+                #     --save_dir /output/ \
+                #     --use_chat_format \
+                #     --chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format \
+                #     --nr_category "Generation" "Open QA" "Brainstorm" "Rewrite" "Summarize" "Classify" "Closed QA" "Extract" \
+                #     --config_dir eval/alpaca_farm/configs \
+                #     --config_name gpt4_v{version} \
+                #     --embed_human_response
+                # '''
 
-    else:
-        # d['tasks'][0]['arguments'][0] = f'''
-        # python -m eval.alpaca_farm.run_humanif_eval \
-        #     --dataset /dataset/no_robots_test_data.json \
-        #     --limit_eval_size 200 \
-        #     --use_vllm \
-        #     --model_name_or_path /model \
-        #     --tokenizer_name_or_path /model \
-        #     --reference_path /references/gpt-3.5-turbo_references_test_dataset.json \
-        #     --save_dir /output/ \
-        #     --use_chat_format \
-        #     --chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format \
-        #     --nr_category "Generation" "Open QA" "Brainstorm" "Rewrite" "Summarize" "Classify" "Closed QA" "Extract" \
-        #     --config_dir eval/alpaca_farm/configs \
-        #     --config_name gpt4_v{version}
-        # '''
-        # # d['tasks'][0]['arguments'][0] = f'''
-        # python -m eval.alpaca_farm.run_humanif_eval \
-        #     --dataset /dataset/no_robots_test_data.json \
-        #     --limit_eval_size 200 \
-        #     --use_vllm \
-        #     --model_name_or_path /model \
-        #     --tokenizer_name_or_path /model \
-        #     --reference_path /references/gpt-3.5-turbo_references_test_dataset.json \
-        #     --save_dir /output/ \
-        #     --use_chat_format \
-        #     --chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format \
-        #     --nr_category "Generation" "Open QA" "Brainstorm" "Rewrite" "Summarize" "Classify" "Closed QA" "Extract" \
-        #     --config_dir eval/alpaca_farm/configs \
-        #     --config_name gpt4_v{version} \
-        #     --embed_human_response
-        # '''
+                # d['tasks'][0]['arguments'][0] = f'''
+                # python -m eval.alpaca_farm.run_humanif_eval \
+                #     --dataset /dataset/no_robots_test_data.json \
+                #     --limit_eval_size 200 \
+                #     --use_vllm \
+                #     --model_name_or_path /model \
+                #     --tokenizer_name_or_path /model \
+                #     --reference_path /references/gpt-3.5-turbo_references_test_dataset.json \
+                #     --save_dir /output/ \
+                #     --use_chat_format \
+                #     --chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format \
+                #     --nr_category "Generation" "Open QA" "Brainstorm" "Rewrite" "Summarize" "Classify" "Closed QA" "Extract" \
+                #     --config_dir /net/nfs.cirrascale/allennlp/xinxil/open-instruct/eval/alpaca_farm/configs \
+                #     --config_name gpt4_v{version}
+                # '''
+                # d['tasks'][0]['arguments'][0] = f'''
+                # python -m eval.alpaca_farm.run_humanif_eval \
+                #     --dataset /dataset/no_robots_test_data.json \
+                #     --limit_eval_size 200 \
+                #     --use_vllm \
+                #     --model_name_or_path /model \
+                #     --tokenizer_name_or_path /model \
+                #     --reference_path /references/gpt-3.5-turbo_references_test_dataset.json \
+                #     --save_dir /output/ \
+                #     --use_chat_format \
+                #     --chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format \
+                #     --nr_category "Generation" "Open QA" "Brainstorm" "Rewrite" "Summarize" "Classify" "Closed QA" "Extract" \
+                #     --config_dir /net/nfs.cirrascale/allennlp/xinxil/open-instruct/eval/alpaca_farm/configs \
+                #     --config_name gpt4_v{version} \
+                #     --embed_human_response
+                # '''
 
-        d['tasks'][0]['arguments'][0] = f'''
-        python -m eval.alpaca_farm.run_humanif_eval \
-            --dataset /dataset/no_robots_test_data.json \
-            --limit_eval_size 200 \
-            --use_vllm \
-            --model_name_or_path /model \
-            --tokenizer_name_or_path /model \
-            --reference_path /references/gpt-3.5-turbo_references_test_dataset.json \
-            --save_dir /output/ \
-            --use_chat_format \
-            --chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format \
-            --nr_category "Generation" "Open QA" "Brainstorm" "Rewrite" "Summarize" "Classify" "Closed QA" "Extract" \
-            --config_dir /net/nfs.cirrascale/allennlp/xinxil/open-instruct/eval/alpaca_farm/configs \
-            --config_name gpt4_v{version}
-        '''
-        # d['tasks'][0]['arguments'][0] = f'''
-        # python -m eval.alpaca_farm.run_humanif_eval \
-        #     --dataset /dataset/no_robots_test_data.json \
-        #     --limit_eval_size 200 \
-        #     --use_vllm \
-        #     --model_name_or_path /model \
-        #     --tokenizer_name_or_path /model \
-        #     --reference_path /references/gpt-3.5-turbo_references_test_dataset.json \
-        #     --save_dir /output/ \
-        #     --use_chat_format \
-        #     --chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format \
-        #     --nr_category "Generation" "Open QA" "Brainstorm" "Rewrite" "Summarize" "Classify" "Closed QA" "Extract" \
-        #     --config_dir /net/nfs.cirrascale/allennlp/xinxil/open-instruct/eval/alpaca_farm/configs \
-        #     --config_name gpt4_v{version} \
-        #     --embed_human_response
-        # '''
-
-        # d['tasks'][0]['arguments'][0] = f'''
-        # python -m eval.alpaca_farm.run_alpaca_cross_eval \
-        #     --dataset /dataset/alpaca_farm_human_crossannotations.json \
-        #     --limit_eval_size 200 \
-        #     --use_vllm \
-        #     --model_name_or_path /model \
-        #     --tokenizer_name_or_path /model \
-        #     --save_dir /output/ \
-        #     --use_chat_format \
-        #     --chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format \
-        #     --nr_category "Generation" "Open QA" "Brainstorm" "Rewrite" "Summarize" "Classify" "Closed QA" "Extract" \
-        #     --config_dir eval/alpaca_farm/configs \
-        #     --config_name gpt4_v{version} \
-        # '''
-        # d['tasks'][0]['resources']['gpuCount'] = 0
-
-        # mount the references dir to `/references`
-        d['tasks'][0]['datasets'].append({
-            'mountPath': "/references",
-            'source': {
-                'beaker': "01HV2FC1TCHK40MA2TY8SYP4X8"
-            }
-        })
-        # mount the dataset dir to `/dataset`
-        d['tasks'][0]['datasets'].append({
-            'mountPath': "/dataset",
-            'source': {
-                'beaker': "01HVAA6XMNPNRTPG0SMS1JXJR5"
-            }
-        })
-        # 
-        # change image
-        d['tasks'][0]['image']['beaker'] = "alrope/xinxil_open_instruct"
-
-        d['tasks'][0]['resources']['gpuCount'] = num_gpus_for_non_api
-        if model_info[0].startswith("hf-"):  # if it's a huggingface model, load it from the model hub
-            d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--model_name_or_path /model", "--model_name_or_path "+model_info[1])]
-            d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--tokenizer_name_or_path /model", "--model_name_or_path "+model_info[1])]
-        elif model_info[1].startswith("/"):  # if it's a local model, load it from the local directory
-            d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--model_name_or_path /model", "--model_name_or_path "+model_info[1])]
-            d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--tokenizer_name_or_path /model", "--model_name_or_path "+model_info[1])]
-        else:  # if it's a beaker model, mount the beaker dataset to `/model`
-            d['tasks'][0]['datasets'][1]['source']['beaker'] = model_info[1]
-
-        # if a specific checkpoint is specified, load model from that checkpoint
-        if model_info[2] is not None:
-            # extract existing model path
-            model_name_or_path = re.search("--model_name_or_path (\S+)", d['tasks'][0]['arguments'][0]).group(1)
-            # replace the model path with the checkpoint subfolder
-            d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace(model_name_or_path, model_name_or_path+"/"+model_info[2])]
-            # replace the tokenizer path with the checkpoint subfolder
-            tokenizer_name_or_path = re.search("--tokenizer_name_or_path (\S+)", d['tasks'][0]['arguments'][0]).group(1)
-
-        # for vanilla_lm, remove the chat formatting function
-        if model_info[3] == "vanilla_lm":
-            d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--use_chat_format", "")]
-
-        if "13B" in model_info[0]:
-            # find the batch size argument, and reduce by 4x
-            if "--eval_batch_size" in d['tasks'][0]['arguments'][0]:
-                original_batch_size = re.search("--eval_batch_size (\d+)", d['tasks'][0]['arguments'][0]).group(1)
-                new_batch_size = max(1, int(original_batch_size) // 2)
-                d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--eval_batch_size {}".format(original_batch_size), "--eval_batch_size {}".format(new_batch_size))]
+                # d['tasks'][0]['arguments'][0] = f'''
+                # python -m eval.alpaca_farm.run_alpaca_cross_eval \
+                #     --dataset /dataset/alpaca_farm_human_crossannotations.json \
+                #     --limit_eval_size 200 \
+                #     --use_vllm \
+                #     --model_name_or_path /model \
+                #     --tokenizer_name_or_path /model \
+                #     --save_dir /output/ \
+                #     --use_chat_format \
+                #     --chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format \
+                #     --nr_category "Generation" "Open QA" "Brainstorm" "Rewrite" "Summarize" "Classify" "Closed QA" "Extract" \
+                #     --config_dir eval/alpaca_farm/configs \
+                #     --config_name gpt4_v{version} \
+                # '''
+                # d['tasks'][0]['resources']['gpuCount'] = 0
 
 
-        if "30B" in model_info[0] or "34B" in model_info[0]:
-            # find the batch size argument, and reduce by 4x
-            if "--eval_batch_size" in d['tasks'][0]['arguments'][0]:
-                original_batch_size = re.search("--eval_batch_size (\d+)", d['tasks'][0]['arguments'][0]).group(1)
-                new_batch_size = max(1, int(original_batch_size) // 4)
-                d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--eval_batch_size {}".format(original_batch_size), "--eval_batch_size {}".format(new_batch_size))]
- 
-        elif "70B" in model_info[0] or "65B" in model_info[0] or "40B" in model_info[0]:
-            # find the batch size argument, and reduce by 4x
-            if "--eval_batch_size" in d['tasks'][0]['arguments'][0]:
-                original_batch_size = re.search("--eval_batch_size (\d+)", d['tasks'][0]['arguments'][0]).group(1)
-                new_batch_size = max(1, int(original_batch_size) // 4)
-                d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--eval_batch_size {}".format(original_batch_size), "--eval_batch_size {}".format(new_batch_size))]
+                # mount the references dir to `/references`
+                d['tasks'][0]['datasets'].append({
+                    'mountPath': "/references",
+                    'source': {
+                        'beaker': "alrope/references"
+                    }
+                })
+                # mount the dataset dir to `/dataset`
+                d['tasks'][0]['datasets'].append({
+                    'mountPath': "/dataset",
+                    'source': {
+                        'beaker': "alrope/dataset"
+                    }
+                })
+                # 
+                d['tasks'][0]['envVars'].append({
+                    'name': "HUGGINGFACE_TOKEN",
+                    'secret': "huggingface_token"
+                })
 
-            # request 2x more GPUs
-            d['tasks'][0]['resources']['gpuCount'] = 2 * d['tasks'][0]['resources']['gpuCount']
+                if "_wo_" not in version and "_w_" in version:
+                    d['tasks'][0]['arguments'][0] = d['tasks'][0]['arguments'][0].strip() +  "    --embed_human_response\n"
+
+                d['tasks'][0]['resources']['gpuCount'] = num_gpus_for_non_api
+                if "output_path" in d['tasks'][0]['arguments'][0] and model == "gpt4":
+                    d['tasks'][0]['resources']['gpuCount'] = 0
+                
+                if model_info[0].startswith("hf-"):  # if it's a huggingface model, load it from the model hub
+                    d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--model_name_or_path /model", "--model_name_or_path "+model_info[1])]
+                    d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--tokenizer_name_or_path /model", "--model_name_or_path "+model_info[1])]
+                elif model_info[1].startswith("/"):  # if it's a local model, load it from the local directory
+                    d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--model_name_or_path /model", "--model_name_or_path "+model_info[1])]
+                    d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--tokenizer_name_or_path /model", "--model_name_or_path "+model_info[1])]
+                else:  # if it's a beaker model, mount the beaker dataset to `/model`
+                    d['tasks'][0]['datasets'][1]['source']['beaker'] = model_info[1]
+
+                # if a specific checkpoint is specified, load model from that checkpoint
+                if model_info[2] is not None:
+                    # extract existing model path
+                    model_name_or_path = re.search("--model_name_or_path (\S+)", d['tasks'][0]['arguments'][0]).group(1)
+                    # replace the model path with the checkpoint subfolder
+                    d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace(model_name_or_path, model_name_or_path+"/"+model_info[2])]
+                    # replace the tokenizer path with the checkpoint subfolder
+                    tokenizer_name_or_path = re.search("--tokenizer_name_or_path (\S+)", d['tasks'][0]['arguments'][0]).group(1)
+
+                # for vanilla_lm, remove the chat formatting function
+                if model_info[3] == "vanilla_lm":
+                    d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--use_chat_format", "")]
+
+                if "13B" in model_info[0]:
+                    # find the batch size argument, and reduce by 4x
+                    if "--eval_batch_size" in d['tasks'][0]['arguments'][0]:
+                        original_batch_size = re.search("--eval_batch_size (\d+)", d['tasks'][0]['arguments'][0]).group(1)
+                        new_batch_size = max(1, int(original_batch_size) // 2)
+                        d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--eval_batch_size {}".format(original_batch_size), "--eval_batch_size {}".format(new_batch_size))]
 
 
-        if "llama2-chat" in model_info[0]:
-            d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace(
-                "--chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format", 
-                "--chat_formatting_function eval.templates.create_prompt_with_llama2_chat_format")
-            ]
-        elif "code_llama_instruct" in model_info[0]:
-            d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace(
-                "--chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format", 
-                "--chat_formatting_function eval.templates.create_prompt_with_llama2_chat_format")
-            ]
-        elif "zephyr" in model_info[0]:
-            d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace(
-                "--chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format", 
-                "--chat_formatting_function eval.templates.create_prompt_with_zephyr_chat_format")
-            ]
-        elif "xwin" in model_info[0]:
-            d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace(
-                "--chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format", 
-                "--chat_formatting_function eval.templates.create_prompt_with_xwin_chat_format")
-            ]
-        elif "olmo" in model_info[0]:
-            d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace(
-                "--chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format", 
-                "--chat_formatting_function eval.templates.create_prompt_with_olmo_chat_format")
-            ]
-            # no vllm for olmo yet
-            if "--use_vllm" in d['tasks'][0]['arguments'][0]:
-                print(f"Removing --use_vllm for {model_info[0]}")
-                d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--use_vllm", "")] 
+                if "30B" in model_info[0] or "34B" in model_info[0]:
+                    # find the batch size argument, and reduce by 4x
+                    if "--eval_batch_size" in d['tasks'][0]['arguments'][0]:
+                        original_batch_size = re.search("--eval_batch_size (\d+)", d['tasks'][0]['arguments'][0]).group(1)
+                        new_batch_size = max(1, int(original_batch_size) // 4)
+                        d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--eval_batch_size {}".format(original_batch_size), "--eval_batch_size {}".format(new_batch_size))]
+        
+                elif "70B" in model_info[0] or "65B" in model_info[0] or "40B" in model_info[0]:
+                    # find the batch size argument, and reduce by 4x
+                    if "--eval_batch_size" in d['tasks'][0]['arguments'][0]:
+                        original_batch_size = re.search("--eval_batch_size (\d+)", d['tasks'][0]['arguments'][0]).group(1)
+                        new_batch_size = max(1, int(original_batch_size) // 4)
+                        d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--eval_batch_size {}".format(original_batch_size), "--eval_batch_size {}".format(new_batch_size))]
+
+                    # request 2x more GPUs
+                    d['tasks'][0]['resources']['gpuCount'] = 2 * d['tasks'][0]['resources']['gpuCount']
 
 
-        if any([x in model_info[0] for x in ["opt", "pythia", "falcon"]]):
-            if "--use_vllm" in d['tasks'][0]['arguments'][0]:
-                print(f"Removing --use_vllm for {model_info[0]}")
-                d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--use_vllm", "")] 
+                if "llama2-chat" in model_info[0]:
+                    d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace(
+                        "--chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format", 
+                        "--chat_formatting_function eval.templates.create_prompt_with_llama2_chat_format")
+                    ]
+                elif "code_llama_instruct" in model_info[0]:
+                    d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace(
+                        "--chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format", 
+                        "--chat_formatting_function eval.templates.create_prompt_with_llama2_chat_format")
+                    ]
+                elif "zephyr" in model_info[0]:
+                    d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace(
+                        "--chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format", 
+                        "--chat_formatting_function eval.templates.create_prompt_with_zephyr_chat_format")
+                    ]
+                elif "xwin" in model_info[0]:
+                    d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace(
+                        "--chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format", 
+                        "--chat_formatting_function eval.templates.create_prompt_with_xwin_chat_format")
+                    ]
+                elif "olmo" in model_info[0]:
+                    d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace(
+                        "--chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format", 
+                        "--chat_formatting_function eval.templates.create_prompt_with_olmo_chat_format")
+                    ]
+                    # no vllm for olmo yet
+                    if "--use_vllm" in d['tasks'][0]['arguments'][0]:
+                        print(f"Removing --use_vllm for {model_info[0]}")
+                        d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--use_vllm", "")] 
 
 
-    fn = "beaker_configs/auto_created/{}.yaml".format(name)
-    file = open(fn, "w")
-    yaml.dump(d, file, default_flow_style=False)
-    file.close()
+                if any([x in model_info[0] for x in ["opt", "pythia", "falcon"]]):
+                    if "--use_vllm" in d['tasks'][0]['arguments'][0]:
+                        print(f"Removing --use_vllm for {model_info[0]}")
+                        d['tasks'][0]['arguments'] = [d['tasks'][0]['arguments'][0].replace("--use_vllm", "")] 
 
-    cmd = "beaker experiment create {} --workspace ai2/pradeepd-open-instruct".format(fn)
-    subprocess.Popen(cmd, shell=True)
+
+            fn = "beaker_configs/auto_created/{}.yaml".format(name)
+            file = open(fn, "w")
+            yaml.dump(d, file, default_flow_style=False)
+            file.close()
+
+            cmd = "beaker experiment create {} --workspace ai2/pradeepd-open-instruct".format(fn)
+            subprocess.Popen(cmd, shell=True)

@@ -21,7 +21,7 @@ def main(args):
     nr_category = args.nr_category
     
 
-    prompts = []
+    prompts = defaultdict(list)
     if prompt_file_path:
         assert os.path.exists(prompt_file_path)
         with open(prompt_file_path, mode ='r') as f:    
@@ -30,15 +30,15 @@ def main(args):
                 shuffled = True if line["Shuffled"] == "TRUE" else False
                 output1 = line["Output 1"] if not shuffled else line["Output 2"]
                 output2 = line["Output 2"] if not shuffled else line["Output 1"] 
-                prompts.append({
+                category = line["Task"] 
+                prompts[category].append({
                     "instruction": line["Instruction"],
-                    "output_1": output1,
-                    "output_2": output2,
-                    "generator": "unknown",
-                    "dataset": "test_no_robots"
+                    "output": output2,
+                    "generator": "Llama2-chat-7b",
+                    "dataset": f"no_robots_{category}"
             })
 
-    with open(os.path.join(save_dir, "no_robots_test_data_pairs.json"), 'w') as f:
+    with open(os.path.join(save_dir, "Llama2-chat-7b_references_test_dataset.json"), 'w') as f:
         json.dump(prompts, f)
 
 

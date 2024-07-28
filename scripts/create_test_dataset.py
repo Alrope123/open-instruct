@@ -21,7 +21,7 @@ def main(args):
     nr_category = args.nr_category
     
     selected_examples = defaultdict(list)  # category -> list of example dicts
-    no_robots_data = datasets.load_dataset("HuggingFaceH4/no_robots")["train_sft"]
+    no_robots_data = datasets.load_dataset("HuggingFaceH4/no_robots")["train"]
     for example in no_robots_data:
         category = example["category"]
         if nr_category and category not in nr_category:
@@ -69,8 +69,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--nr_category",
         type=str,
-        choices=["Generation", "Open QA", "Brainstorm", "Chat", "Rewrite", "Summarize",
-                 "Coding", "Classify", "Closed QA", "Extract"],
+        # choices=["Generation", "Open QA", "Brainstorm", "Chat", "Rewrite", "Summarize",
+        #          "Coding", "Classify", "Closed QA", "Extract"],
         nargs="+",
         help="Categories in the No Robots dataset to include. If not specified, all categories will be used"
     )
