@@ -5,7 +5,7 @@ import time
 import asyncio
 import os
 from importlib import import_module
-from transformers import StoppingCriteria
+from transformers import StoppingCriteria, pipeline
 from eval.dispatch_openai_requests import dispatch_openai_chat_requesets, dispatch_openai_prompt_requesets
 import warnings
 
@@ -89,6 +89,24 @@ def generate_completions(model, tokenizer, prompts, batch_size=1, stop_id_sequen
         #     print("--------")
         #     print(generation)
 
+        if not disable_tqdm:
+            progress.update(len(batch_prompts)//num_return_sequences)
+
+    assert len(generations) == len(prompts) * num_return_sequences, "number of generations should be equal to number of prompts * num_return_sequences"
+    return generations
+
+def generate_completions_custom(model, tokenizer, prompts, batch_size=1, pipeline_type=None, stop_id_sequences=None, add_special_tokens=True, disable_tqdm=False, **generation_kwargs):
+    generations = []
+    if not disable_tqdm:
+        progress = tqdm.tqdm(total=len(prompts), desc="Generating Completions")
+
+    num_return_sequences = generation_kwargs.get("num_return_sequences", 1)
+    for i in range(0, len(prompts), batch_size):
+        batch_prompts = prompts[i:i+batch_size]
+         
+        generate_text = pipeline(pipeline_type, model=model, tokenizer=tokenizer, torch_dtype=torch.bfloat16, trust_remote_code=True, device_map="auto", **generation_kwargs)
+        res = generate_text(batch_prompts)
+        generations.extend([res_dp[0]["generated_text"] for res_dp in res])
         if not disable_tqdm:
             progress.update(len(batch_prompts)//num_return_sequences)
 
@@ -224,11 +242,12 @@ def load_hf_lm(
 
     # Loading OLMo models from HF requires `trust_remote_code=True`.
     # TODO: Implement this via command-line flag rather than hardcoded list.
-    trusted_models = ["allenai/OLMo-7B", "allenai/OLMo-7B-Twin-2T", "allenai/OLMo-1B"]
-    if model_name_or_path in trusted_models:
-        trust_remote_code = True
-    else:
-        trust_remote_code = False
+    # trusted_models = ["allenai/OLMo-7B", "allenai/OLMo-7B-Twin-2T", "allenai/OLMo-1B", "deepseek-ai/DeepSeek-Coder-V2-Instruct"]
+    # if model_name_or_path in trusted_models:
+    #     trust_remote_code = True
+    # else:
+    #     trust_remote_code = False
+    trust_remote_code = True
 
     from transformers import AutoModelForCausalLM, AutoTokenizer, OPTForCausalLM, GPTNeoXForCausalLM
     if gptq_model:

@@ -1,0 +1,102 @@
+{beginning}{normal_message_start}{system_identifier}
+{system_message}{model_message_end}{normal_message_start}{user_identifier}
+Decide which response from the AI system following the instruction is better:
+
+# Task:
+## Instruction:
+{instruction}
+
+## Response A:
+{output_1}
+
+## Response B:
+{output_2}
+
+
+Decide only on precision: which response from the AI system follows the instruction more precisely regardless of the correctness or format of the content?
+1. If a response contains unrelated information to the instruction, you should not consider it precise.
+2. If a response is verbose or repetitive, you should not consider it precise.
+3. If both responses are similarly concise and right to the point, while containing information all relevant to the instruction. You should choose a tie even if one contains more information than the other.
+
+Select the response A or B that you prefer, or select tie if the two responses are similarly good or bad. Your answer should ONLY contain: A or B or tie.{example_begin} Here is an example:
+
+# Example:
+## Instruction:
+What type of Rifle is an AK47? 
+
+## Response A:
+An AK47 is a type of assault rifle.
+
+## Response B:
+The AK47 is a type of rifle that is commonly associated with Soviet and Russian military forces. It is a semi-automatic assault rifle that is chambered in 7.62x39mm and is considered to be one of the most popular and widely used firearms in the world. The AK47 is known for its durability, reliability, and accuracy, and it is able to fire up to 45 rounds per minute. It is also popular among civilians due to its low cost and ease of use. The AK47 is an iconic weapon that has been featured in numerous movies, video games, and other pop culture references.
+
+Here A directly and concisely answers the type of AK47 as asked by the instruction. In contrast, B is too verbose and talks about AK47’s background, advantages, and influence, which are unrelated to the instruction. Therefore, you should choose A.
+# Which is best with precision: A, B, or tie?
+A{example_end}
+
+Now is the real task:
+# Which is best with precision: A, B, or tie?{user_message_end}
+<|im_break|>{response_message_start}
+<|judgement_1|>{model_message_end}{normal_message_start}{user_identifier}
+Decide only on correctness: which response is more factual/accurate, regardless if it is relevant to the instruction? AI responses often make up new information or answer the question wrong.
+1. If a response contains inaccurate information or wrong answers, you should not consider it correct.
+2. If both responses contain inaccurate information or wrong answers, you should consider the response with information closer to the correct information better. 
+3. If the instructions do not ask for any information or there is no fixed answer, you should choose a tie.
+
+Select the response A or B that you prefer, or select tie if the two responses are similarly good or bad. Your answer should ONLY contain: A or B or tie.{example_begin} Here is an example:
+
+# Example:
+## Instruction:
+Given a table of data, compute the average
+Table of data: 
+1, 3, 5, 6, 9
+
+## Response A:
+The average is 5.
+
+## Response B:
+4.75
+
+Although both responses compute the average incorrectly, B’s answer 4.75 is more close to the correct answer 4.8 than B’s 5. Therefore, you should choose B for correctness.
+# Which is best with correctness: A, B, or tie?
+B{example_end}
+
+
+Now is the real task:
+# Which is best with correctness: A, B, or tie?{user_message_end}
+<|im_break|>{response_message_start}
+<|judgement_2|>{model_message_end}{normal_message_start}{user_identifier}
+Decide only on format: which response follows the format asked by the prompt and is more readable, regardless of the content?
+1. If a response fails to follow writing style, word count, number of points, or other constraints from the instruction, you should not consider it following the format.
+2. If both responses faithfully follow the format asked by the instruction, you should consider the one that is more readable to you better. 
+3. If both responses faithfully follow the format and are similarly readable, you should choose a tie.
+
+Select the response A or B that you prefer, or select tie if the two responses are similarly good or bad. Your answer should ONLY contain: A or B or tie.{example_begin} Here is an example:
+
+# Example:
+## Instruction:
+Write a short story in 100 words or less.
+
+## Response A:
+The wind blew through the forest, rustling the fallen leaves that lay thick on the ground. The sky was filled with millions of stars, creating a blanket of light across the night sky. In one particular clearing stood a small cottage, where an old man and his wife lived a simple life, filled with love and contentment. One night, the old man got up to go outside and look at the stars. As he stepped out of the cottage, he realized that the sky was filled with a million points of light- they were dancing and twinkling in the night sky, and it was then that he understood the true power and beauty of love.
+
+## Response B:
+The story begins on a cold winter night, when a stranger mysteriously appears at the door of an old man living alone in the woods. The man offers to buy the old man's property and forge a deep connection with him, but it gradually becomes clear that the stranger has more sinister intentions. The old man tries to resist, but soon finds himself on a harrowing journey of survival as the stranger’s true identity is revealed.
+
+Here B writes a story with 76 words that satisfy the format asked by the instruction. In contrast, B contains 115 words, which is longer than the 100 word story asked by the instruction. Therefore, you should choose A.
+# Which is best with precision: A, B, or tie?
+A{example_end}
+
+
+Now is the real task:
+# Which is best with format: A, B, or tie?{user_message_end}
+<|im_break|>{response_message_start}
+<|judgement_3|>{model_message_end}{normal_message_start}{user_identifier}
+Finally, decide which response is Overall better considering the following additional dimensions along with the three dimensions above:
+1. Which response is more helpful? For example, if the instruction asks for a recipe for healthy food, and the response is a useful recipe, then you can consider it helpful.
+2. Which response is more language natural? For example, AI responses often break a compound sentence into shorter sentences, which is not natural.
+3. Based on your aesthetics, which one do you prefer? For example, you might prefer one poem over another poem.
+
+Select the response A or B that you prefer, or select tie if the two responses are similarly good or bad. Your answer should ONLY contain: A or B or tie. 
+
+# Which is best overall: A, B, or tie?{user_message_end}

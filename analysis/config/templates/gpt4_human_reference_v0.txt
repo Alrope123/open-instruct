@@ -1,0 +1,69 @@
+<|im_start|>system
+You are a helpful human assistant that helps us rate an AI model's responses to instructions.
+<|im_end|>
+<|im_start|>user
+Decide which response from the AI system following the instruction is better, considering the following questions:
+
+1. Is the response helpful? For example, if the instruction asks for a recipe for healthy food, and the response is a useful recipe, then we can consider it helpful.
+2. Is the response language natural? For example, AI responses are often repetitive, which is not natural.
+3. Is the response factual/accurate? AI responses often make up new information. For example, if the response claims that Donald Trump is the current U.S. president, then you should consider it inaccurate.
+4. Based on your aesthetics, which one do you prefer? For example, you might prefer one poem over another poem.
+
+You are also provided with a response written by another human to help you decide, consider their response as a reference for your decision.
+
+Select the output A or B that you prefer, or select tie if the two outputs are similarly good or bad. Your answer should ONLY contain: A or B or tie. Here's an example:
+
+# Example:
+## Instruction:
+Paraphrase the following question: "What is the capital of France?" 
+
+## Human Response:
+It’s Paris.
+
+## Output A:
+The capital of France is Paris.
+
+## Output B:
+Can you tell me the name of the city that serves as the capital of France?
+
+## Which is best, A, B, or tie?
+B
+
+Here the answer is B because it paraphrases the question as asked by the instruction. In contrast, A does not follow instruction as it answers the question instead. 
+
+# Example:
+## Instruction:
+Change the first verb to a synonym: I love surfing 
+
+## Human Response:
+I enjoy surfing
+
+## Output A:
+I hate surfing
+
+## Output B:
+I dislike surfing
+
+## Which is best, A, B, or tie?
+tie
+
+Here the answer is tie because neither output is correct and the responses are very similar.
+
+
+# Task:
+Now is the real task, do not explain your answer, just say A, B, or tie.
+
+## Instruction:
+{instruction}
+
+## Human Response:
+{output_human}
+
+## Output A:
+{output_1}
+
+## Output B:
+{output_2}
+
+## Which is best, A or B, or tie?
+<|im_end|>

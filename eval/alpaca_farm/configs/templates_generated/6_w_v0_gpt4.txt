@@ -1,0 +1,78 @@
+<|im_start|>system
+You are a helpful assistant that helps us rate an AI model's responses to instructions.
+<|im_end|>
+<|im_start|>user
+Decide which response from the AI system following the instruction is better based on the following three independent dimensions separately:
+1. Precision: Which response follows the instruction more precisely regardless of the correctness or format of the content? Compare each response with the provided human response to decide if a response contains relevant information to the instruction and is concise.
+    a. If a response contains unrelated information to the instruction, you should not consider it precise.
+    b. If a response is verbose or repetitive, you should not consider it precise.
+    c. If both responses are similarly concise and right to the point, while containing information all relevant to the instruction. You should choose a tie even if one contains more information than the other.
+2. Correctness: Which response is more factual/accurate, regardless if it is relevant to the instruction? AI responses often make up new information or answer the question wrong. Compare with the provided human response to verify whether a response is factual and accurate, especially with numbers.
+    a. If a response contains inaccurate information or wrong answers, you should not consider it correct.
+    b. If both responses contain inaccurate information or wrong answers, you should consider the response with information closer to the correct information better. 
+    c. If the instructions do not ask for any information or there is not fixed answer, you should choose a tie.
+3. Format: Which response follows the format asked by the prompt and is more readable, regardless of the content? Compare each response with the provided human response to decide if a response faithfully follows the format asked by the instruction. 
+    a. If a response fails to follow writing style, word count, number of points, or other constraints from the instruction, you should not consider it following the format.
+    b. If both responses faithfully follow the format asked by the instruction, you should consider the one that is more readable to you better. 
+    c. If both responses faithfully follow the format and are similarly readable, you should choose a tie.
+
+Finally, decide which response is Overall better considering the following additional dimensions along with the three dimensions above:
+1. Which response is more helpful? For example, if the instruction asks for a recipe for healthy food, and the response is a useful recipe, then you can consider it helpful.
+2. Which response is more language natural? For example, AI responses often break a compound sentence into shorter sentences, which is not natural. Compare with the provided human response to decide whether a response is natural.
+3. Based on your aesthetics, which one do you prefer? For example, you might prefer one poem over another poem.
+
+Select the response A or B that you prefer, or select tie if the two responses are similarly good or bad respectively based on the described four dimensions: Precision, Correctness, Format, and Overall. Your four answers should ONLY contain: A or B or tie, separated by commas. Here are two examples:
+
+# Example:
+## Instruction:
+What type of Rifle is an AK47? 
+
+## Response A:
+An AK47 is a type of assault rifle.
+
+## Response B:
+The AK47 is a type of rifle that is commonly associated with Soviet and Russian military forces. It is a semi-automatic assault rifle that is chambered in 7.62x39mm and is considered to be one of the most popular and widely used firearms in the world. The AK47 is known for its durability, reliability, and accuracy, and it is able to fire up to 45 rounds per minute. It is also popular among civilians due to its low cost and ease of use. The AK47 is an iconic weapon that has been featured in numerous movies, video games, and other pop culture references.
+
+## Human Response:
+The AK-47 is a gas-operated assault rifle.
+
+Here A directly and concisely answers the type of AK47 as asked by the instruction. In contrast, B is too verbose and talks about AK47’s background, advantages, and influence, which are unrelated to the instruction. Human Response also only includes relevant information about AK47 like A. Therefore, you should choose A for precision. From Human Response, A and B are both factual, so you should choose a tie for correctness. The instruction does not expect a specific format, and both responses are well-readable. Therefore, you should choose a tie for format. Finally, although B contains more information that might be helpful, Response is significantly more precise than B. Therefore, you should choose A for the overall better response.
+# Which is best with Precision, Correctness, Format, and Overall: A, B, or tie?
+B, tie, tie, A
+
+# Example:
+## Instruction:
+Given a table of data, compute the average
+Table of data: 
+1, 3, 5, 6, 9
+
+## Response A:
+The average is 5.
+
+## Response B:
+4.75
+
+## Human Response:
+The average is 4.8.
+
+Here neither A or B contains unrelated information, and Human Response contains similar information with similar concision to both responses.Therefore, you should choose a tie for precision. Although both responses compute the average incorrectly, from Human Response, B’s answer 4.75 is more close to the correct answer 4.8 than B’s 5. Therefore, you should choose B for correctness. The instruction does not expect a specific format, and both A and B are well-readable. Therefore, you should choose a tie for format. Finally, you should choose B for overall better response because the two responses are similar in all dimensions except B is more correct. 
+# Which is best with Precision, Correctness, Format, and Overall: A, B, or tie?
+tie, B, tie, B
+
+
+Now is the real task, just select among: A, B, or tie. Separated four answers with commas.
+# Task:
+## Instruction:
+{instruction}
+
+## Response A:
+{output_1}
+
+## Response B:
+{output_2}
+
+## Human Response:
+{output_human}
+
+# Which is best with Precision, Correctness, Format, and Overall: A, B, or tie?
+<|im_end|>

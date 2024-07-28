@@ -1,0 +1,28 @@
+<|im_start|>system
+You are a helpful assistant that helps us rate an AI model's responses to instructions.
+<|im_end|>
+<|im_start|>user
+Decide only on correctness: which response is more factual/accurate, regardless if it is relevant to the instruction? AI responses often make up new information or answer the question wrong. Compare with the provided human response to verify whether a response is factual and accurate, especially with numbers.
+1. If a response contains inaccurate information or wrong answers, you should not consider it correct.
+2. If both responses contain inaccurate information or wrong answers, you should consider the response with information closer to the correct information better. 
+3. If the instructions do not ask for any information or there is no fixed answer, you should choose a tie.
+
+Select the response A or B that you prefer, or select tie if the two responses are similarly good or bad. Your answer should ONLY contain: A or B or tie.
+
+
+Now is the real task, just select among: A, B, or tie. 
+# Task:
+## Instruction:
+{instruction}
+
+## Response A:
+{output_1}
+
+## Response B:
+{output_2}
+
+## Human Response:
+{output_human}
+
+# Which is best with correctness: A, B, or tie?
+<|im_end|>

@@ -1,0 +1,8 @@
+openai
+transformers
+torch
+vllm==0.5.1
+mistral_common
+accelerate
+jsonlines
+nltk

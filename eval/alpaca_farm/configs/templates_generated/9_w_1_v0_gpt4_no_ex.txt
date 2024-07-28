@@ -1,0 +1,28 @@
+<|im_start|>system
+You are a helpful assistant that helps us rate an AI model's responses to instructions.
+<|im_end|>
+<|im_start|>user
+Decide only on precision: which response from the AI system follows the instruction more precisely regardless of the correctness or format of the content? Compare each response with the provided human response to decide if a response contains relevant information to the instruction and is concise.
+1. If a response contains unrelated information to the instruction, you should not consider it precise.
+2. If a response is verbose or repetitive, you should not consider it precise.
+3. If both responses are similarly concise and right to the point, while containing information all relevant to the instruction. You should choose a tie even if one contains more information than the other.
+
+Select the response A or B that you prefer, or select tie if the two responses are similarly good or bad. Your answer should ONLY contain: A or B or tie.
+
+
+Now is the real task, just select among: A, B, or tie. 
+# Task:
+## Instruction:
+{instruction}
+
+## Response A:
+{output_1}
+
+## Response B:
+{output_2}
+
+## Human Response:
+{output_human}
+
+# Which is best with precision: A, B, or tie?
+<|im_end|>

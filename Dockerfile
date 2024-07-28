@@ -94,17 +94,17 @@ RUN curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-20.
     && rm docker.tgz
 
 # Install Beaker
-ARG BEAKER_VERSION
-RUN curl --silent \
-    --connect-timeout 5 \
-    --max-time 10 \
-    --retry 5 \
-    --retry-delay 0 \
-    --retry-max-time 40 \
-    --output beaker.tar.gz \
-    "https://beaker.org/api/v3/release/cli?os=linux&arch=amd64&version=${BEAKER_VERSION}" \
-    && tar -zxf beaker.tar.gz -C /usr/local/bin/ ./beaker \
-    && rm beaker.tar.gz
+# ARG BEAKER_VERSION
+# RUN curl --silent \
+#     --connect-timeout 5 \
+#     --max-time 10 \
+#     --retry 5 \
+#     --retry-delay 0 \
+#     --retry-max-time 40 \
+#     --output beaker.tar.gz \
+#     "https://beaker.org/api/v3/release/cli?os=linux&arch=amd64&version=${BEAKER_VERSION}" \
+#     && tar -zxf beaker.tar.gz -C /usr/local/bin/ ./beaker \
+#     && rm beaker.tar.gz
 
 # The -l flag makes bash act as a login shell and load /etc/profile, etc.
 ENTRYPOINT ["bash", "-l"]
@@ -117,13 +117,14 @@ RUN apt-get -y install git-lfs
 WORKDIR /stage/
 
 COPY requirements.txt .
-RUN pip install --upgrade pip setuptools wheel
+RUN ls
+RUN pip install --upgrade pip setuptools==69.5.1 wheel
 RUN pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
 RUN pip install packaging
 RUN pip install flash-attn==2.2.2 --no-build-isolation
 RUN pip install -r requirements.txt
 RUN pip install ai2-olmo
-
+RUN pip install git+https://github.com/Alrope123/alpaca_eval.git@9ab7eb79bdee8d44b214967b1c2607f7ea5b6bd7
 # Use v1 of alpaca eval.
 ENV IS_ALPACA_EVAL_2=False
 
@@ -135,3 +136,9 @@ RUN chmod +x scripts/*
 
 # for interactive session
 RUN chmod -R 777 /stage/
+
+RUN pip install -U torch==2.2.0
+RUN pip install -U vllm
+RUN pip install -U flash-attn
+RUN pip install -U prometheus-eval
+RUN pip install bert-score

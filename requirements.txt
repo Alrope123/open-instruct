@@ -31,8 +31,10 @@ flash-attn==2.2.2
 auto-gptq
 fire
 # Pradeep's fork of alpaca eval with bug fixes and better logging
-git+https://github.com/pdasigi/alpaca_eval.git
 # for human eval web app
 flask
-vllm 
+vllm
+# vllm==0.4.0
 openpyxl
+prometheus-eval
+bert-score

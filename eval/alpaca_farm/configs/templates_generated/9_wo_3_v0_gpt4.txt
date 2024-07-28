@@ -1,0 +1,39 @@
+<|im_start|>system
+You are a helpful assistant that helps us rate an AI model's responses to instructions.
+<|im_end|>
+<|im_start|>user
+Decide only on format: which response follows the format asked by the prompt and is more readable, regardless of the content?
+1. If a response fails to follow writing style, word count, number of points, or other constraints from the instruction, you should not consider it following the format.
+2. If both responses faithfully follow the format asked by the instruction, you should consider the one that is more readable to you better. 
+3. If both responses faithfully follow the format and are similarly readable, you should choose a tie.
+
+Select the response A or B that you prefer, or select tie if the two responses are similarly good or bad. Your answer should ONLY contain: A or B or tie. Here is an example:
+
+# Example:
+## Instruction:
+Write a short story in 100 words or less.
+
+## Response A:
+The wind blew through the forest, rustling the fallen leaves that lay thick on the ground. The sky was filled with millions of stars, creating a blanket of light across the night sky. In one particular clearing stood a small cottage, where an old man and his wife lived a simple life, filled with love and contentment. One night, the old man got up to go outside and look at the stars. As he stepped out of the cottage, he realized that the sky was filled with a million points of light- they were dancing and twinkling in the night sky, and it was then that he understood the true power and beauty of love.
+
+## Response B:
+The story begins on a cold winter night, when a stranger mysteriously appears at the door of an old man living alone in the woods. The man offers to buy the old man's property and forge a deep connection with him, but it gradually becomes clear that the stranger has more sinister intentions. The old man tries to resist, but soon finds himself on a harrowing journey of survival as the stranger’s true identity is revealed.
+
+Here B writes a story with 76 words that satisfy the format asked by the instruction. In contrast, B contains 115 words, which is longer than the 100 word story asked by the instruction. Therefore, you should choose A.
+# Which is best with format: A, B, or tie?
+A
+
+
+Now is the real task, just select among: A, B, or tie. 
+# Task:
+## Instruction:
+{instruction}
+
+## Response A:
+{output_1}
+
+## Response B:
+{output_2}
+
+# Which is best with format: A, B, or tie?
+<|im_end|>

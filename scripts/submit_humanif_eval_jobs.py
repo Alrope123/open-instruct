@@ -7,6 +7,7 @@ import itertools
 from datetime import date
 
 today = date.today().strftime("%m%d%Y")
+version = "0.4"
 
 with open("beaker_configs/default_eval.yaml", 'r') as f:
     default_yaml = f.read()
@@ -14,12 +15,13 @@ d1 = yaml.load(default_yaml, Loader=yaml.FullLoader)
 
 # cluster = "ai2/general-cirrascale"
 cluster = "ai2/allennlp-cirrascale"
-#cluster = "ai2/general-cirrascale-a5000"
-#cluster = "ai2/allennlp-elanding-a100-40g"
+# cluster = "ai2/allennlp-cirrascale-sessions"
+# cluster = "ai2/general-cirrascale-a5000"
+# cluster = "ai2/allennlp-elanding-a100-40g"
 # cluster = "ai2/general-cirrascale-a100-80g-ib"
 # cluster = "ai2/prior-elanding"
 num_gpus_for_non_api = 1
-d1['tasks'][0]['context']['cluster'] = cluster
+d1['tasks'][0]['constraints']['cluster'] = [cluster]
 #d1['tasks'][0]['context']['priority'] = "high"
 d1['tasks'][0]['context']['priority'] = "preemptible"
 
@@ -141,33 +143,121 @@ for model_info in models:
     d = copy.deepcopy(d1)
 
     model_name = model_info[0] + f"_{model_info[2]}" if model_info[2] is not None else model_info[0]
-    name = f"open_instruct_eval_humanif_{model_name}_{today}"
+    name = f"open_instruct_eval_humanif_{model_name}_{today}_v{version}"
     d['description'] = name
     d['tasks'][0]['name'] = name
 
     if model_info[0] == "gpt-3.5-turbo":
         d['tasks'][0]['arguments'][0] = '''
-        python eval.alpacal_eval.run_humanif_eval \
+        python /net/nfs.cirrascale/allennlp/pradeepd/workspace/open-instruct-old/eval/alpaca_farm/run_humanif_eval.py \
             --limit_eval_size 200 \
             --save_dir /output/ \
             --openai_engine gpt-3.5-turbo \
             --max_new_tokens 4096 \
-            --nr_category "Generation" "Open QA" "Brainstorm" "Rewrite" "Summarize" "Classify" "Closed QA" "Extract"
+            --nr_category "Generation" "Open QA" "Brainstorm" "Rewrite" "Summarize" "Classify" "Closed QA" "Extract" \
+            --config_dir eval/alpaca_farm/configs \
+            --config_name gpt4
         '''
         d['tasks'][0]['resources']['gpuCount'] = 0
 
     else:
-        d['tasks'][0]['arguments'][0] = '''
-        python eval.alpaca_eval.run_humanif_eval \
+        # d['tasks'][0]['arguments'][0] = f'''
+        # python -m eval.alpaca_farm.run_humanif_eval \
+        #     --dataset /dataset/no_robots_test_data.json \
+        #     --limit_eval_size 200 \
+        #     --use_vllm \
+        #     --model_name_or_path /model \
+        #     --tokenizer_name_or_path /model \
+        #     --reference_path /references/gpt-3.5-turbo_references_test_dataset.json \
+        #     --save_dir /output/ \
+        #     --use_chat_format \
+        #     --chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format \
+        #     --nr_category "Generation" "Open QA" "Brainstorm" "Rewrite" "Summarize" "Classify" "Closed QA" "Extract" \
+        #     --config_dir eval/alpaca_farm/configs \
+        #     --config_name gpt4_v{version}
+        # '''
+        # # d['tasks'][0]['arguments'][0] = f'''
+        # python -m eval.alpaca_farm.run_humanif_eval \
+        #     --dataset /dataset/no_robots_test_data.json \
+        #     --limit_eval_size 200 \
+        #     --use_vllm \
+        #     --model_name_or_path /model \
+        #     --tokenizer_name_or_path /model \
+        #     --reference_path /references/gpt-3.5-turbo_references_test_dataset.json \
+        #     --save_dir /output/ \
+        #     --use_chat_format \
+        #     --chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format \
+        #     --nr_category "Generation" "Open QA" "Brainstorm" "Rewrite" "Summarize" "Classify" "Closed QA" "Extract" \
+        #     --config_dir eval/alpaca_farm/configs \
+        #     --config_name gpt4_v{version} \
+        #     --embed_human_response
+        # '''
+
+        d['tasks'][0]['arguments'][0] = f'''
+        python -m eval.alpaca_farm.run_humanif_eval \
+            --dataset /dataset/no_robots_test_data.json \
             --limit_eval_size 200 \
             --use_vllm \
             --model_name_or_path /model \
             --tokenizer_name_or_path /model \
+            --reference_path /references/gpt-3.5-turbo_references_test_dataset.json \
             --save_dir /output/ \
             --use_chat_format \
             --chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format \
-            --nr_category "Generation" "Open QA" "Brainstorm" "Rewrite" "Summarize" "Classify" "Closed QA" "Extract"
+            --nr_category "Generation" "Open QA" "Brainstorm" "Rewrite" "Summarize" "Classify" "Closed QA" "Extract" \
+            --config_dir /net/nfs.cirrascale/allennlp/xinxil/open-instruct/eval/alpaca_farm/configs \
+            --config_name gpt4_v{version}
         '''
+        # d['tasks'][0]['arguments'][0] = f'''
+        # python -m eval.alpaca_farm.run_humanif_eval \
+        #     --dataset /dataset/no_robots_test_data.json \
+        #     --limit_eval_size 200 \
+        #     --use_vllm \
+        #     --model_name_or_path /model \
+        #     --tokenizer_name_or_path /model \
+        #     --reference_path /references/gpt-3.5-turbo_references_test_dataset.json \
+        #     --save_dir /output/ \
+        #     --use_chat_format \
+        #     --chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format \
+        #     --nr_category "Generation" "Open QA" "Brainstorm" "Rewrite" "Summarize" "Classify" "Closed QA" "Extract" \
+        #     --config_dir /net/nfs.cirrascale/allennlp/xinxil/open-instruct/eval/alpaca_farm/configs \
+        #     --config_name gpt4_v{version} \
+        #     --embed_human_response
+        # '''
+
+        # d['tasks'][0]['arguments'][0] = f'''
+        # python -m eval.alpaca_farm.run_alpaca_cross_eval \
+        #     --dataset /dataset/alpaca_farm_human_crossannotations.json \
+        #     --limit_eval_size 200 \
+        #     --use_vllm \
+        #     --model_name_or_path /model \
+        #     --tokenizer_name_or_path /model \
+        #     --save_dir /output/ \
+        #     --use_chat_format \
+        #     --chat_formatting_function eval.templates.create_prompt_with_tulu_chat_format \
+        #     --nr_category "Generation" "Open QA" "Brainstorm" "Rewrite" "Summarize" "Classify" "Closed QA" "Extract" \
+        #     --config_dir eval/alpaca_farm/configs \
+        #     --config_name gpt4_v{version} \
+        # '''
+        # d['tasks'][0]['resources']['gpuCount'] = 0
+
+        # mount the references dir to `/references`
+        d['tasks'][0]['datasets'].append({
+            'mountPath': "/references",
+            'source': {
+                'beaker': "01HV2FC1TCHK40MA2TY8SYP4X8"
+            }
+        })
+        # mount the dataset dir to `/dataset`
+        d['tasks'][0]['datasets'].append({
+            'mountPath': "/dataset",
+            'source': {
+                'beaker': "01HVAA6XMNPNRTPG0SMS1JXJR5"
+            }
+        })
+        # 
+        # change image
+        d['tasks'][0]['image']['beaker'] = "alrope/xinxil_open_instruct"
 
         d['tasks'][0]['resources']['gpuCount'] = num_gpus_for_non_api
         if model_info[0].startswith("hf-"):  # if it's a huggingface model, load it from the model hub
@@ -257,7 +347,7 @@ for model_info in models:
 
     fn = "beaker_configs/auto_created/{}.yaml".format(name)
     file = open(fn, "w")
-    yaml.dump(d, file, default_flow_style=True)
+    yaml.dump(d, file, default_flow_style=False)
     file.close()
 
     cmd = "beaker experiment create {} --workspace ai2/pradeepd-open-instruct".format(fn)
